@@ -1,10 +1,15 @@
 #pragma once
 
 #include <vector>
-#include "base_classes.hpp"
+#include "baseClasses.hpp"
 
 class Parser {
 public:
-    std::vector<Token> Parse(std::string const& expr);
-    std::vector<Token> ToRPN(std::vector<Token> const& tokens);
+    std::vector<Token> parse(std::string const& expr);
+private:
+    Token parseFunction(std::string const& expr, size_t& pos);
+    Token parseNumber(std::string const& expr, size_t& pos);
+    Token parseOperatorOrParenthesis(std::string const& expr, size_t& pos);
+    std::vector<Token> tokenize(std::string const& expr);
+    std::vector<Token> toRPN(std::vector<Token> const& tokens);
 };
