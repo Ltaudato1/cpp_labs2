@@ -61,7 +61,6 @@ std::vector<Token> Parser::tokenize(std::string const& expr) {
     size_t pos = 0;
     
     while (pos < expr.length()) {
-        // Пропускаем пробелы
         if (std::isspace(expr[pos])) {
             pos++;
             continue;
@@ -89,14 +88,14 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
     std::stack<Token> stack;
     
     // Таблица приоритетов операций
-    auto getPrecedence = [](const std::string& op) {
+    auto getPrecedence = [](std::string const& op) {
         if (op == "^") return 4;
         if (op == "*" || op == "/") return 3;
         if (op == "+" || op == "-") return 2;
         return 0; // Для функций и скобок
     };
     
-    for (const auto& token : tokens) {
+    for (auto const& token : tokens) {
         switch (token.type) {
             case NUMBER:
                 output.push_back(token);

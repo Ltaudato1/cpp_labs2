@@ -10,7 +10,7 @@ int main() {
     Parser parser;
     auto rpn = parser.parse(expr);
     for (auto token: rpn) {
-        std::cout << token.value << " ";
+        std::cout << token.type << "(" << token.value << ") ";
     }
     std::cout << std::endl;
     return 0;

@@ -1,10 +1,10 @@
 #pragma once
 
 #include <vector>
-#include "base_classes.hpp"
-#include "function_registy.hpp"
+#include "baseClasses.hpp"
+#include "functionRegistry.hpp"
 
 class Evaluator {
     public:
-        double evaluate(std::vector<Token> const& rpn, FunctionRegistry const& registry);
+        double evaluate(std::vector<Token> const& rpn);
 };
