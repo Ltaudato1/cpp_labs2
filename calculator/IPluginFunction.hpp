@@ -1,18 +1,21 @@
 #pragma once
 #include <vector>
-#include <memory>
 #include <string>
 
-class IPluginFunction;
+#ifdef _WIN32
+    #ifdef PLUGIN_EXPORTS
+        #define API __declspec(dllexport)
+    #else
+        #define API __declspec(dllimport)
+    #endif
+#else
+    #define API __attribute__((visibility("default")))
+#endif
 
-class PluginLoader {
-public:
-    void loadPlugins(std::string const& pluginsDir = "./plugins");
-    void unloadAll();
-
-private:
-    std::vector<void*> loadedLibraries_;
+extern "C" {
+    typedef double (*ExecuteFunction)(const double* args, int argCount);
+    typedef int (*GetArityFunction)();
+    typedef const char* (*GetNameFunction)();
     
-    std::shared_ptr<IPluginFunction> loadPlugin(std::string const& libraryPath);
-    void handlePluginError(std::string const& libraryPath, std::string const& error);
-};
+    API void registerPluginFunctions();
+}

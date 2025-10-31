@@ -1,6 +1,7 @@
 #include <iostream>
 #include "evaluator.hpp"
 #include <stack>
+#include "functionRegistry.hpp"
 
 double Evaluator::evaluate(const std::vector<Token>& rpnTokens) {
     std::stack<double> stack;

@@ -2,16 +2,17 @@
 
 #include "parser.hpp"
 #include "baseClasses.hpp"
+#include "evaluator.hpp"
+#include "functionRegistry.hpp"
 #include <string>
 
 int main() {
     std::string expr;
+    FunctionRegistry::getInstance().loadPluginsFromDirectory();
     std::getline(std::cin, expr);
     Parser parser;
+    Evaluator evaluator;
     auto rpn = parser.parse(expr);
-    for (auto token: rpn) {
-        std::cout << token.type << "(" << token.value << ") ";
-    }
-    std::cout << std::endl;
+    std::cout << evaluator.evaluate(rpn) << std::endl;
     return 0;
 }

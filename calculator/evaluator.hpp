@@ -2,7 +2,6 @@
 
 #include <vector>
 #include "baseClasses.hpp"
-#include "functionRegistry.hpp"
 
 class Evaluator {
     public:
