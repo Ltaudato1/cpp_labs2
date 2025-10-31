@@ -5,7 +5,7 @@
 
 double Evaluator::evaluate(const std::vector<Token>& rpnTokens) {
     std::stack<double> stack;
-    
+
     for (const auto& token : rpnTokens) {
         if (token.type == NUMBER) {
             stack.push(std::stod(token.value));
@@ -16,7 +16,7 @@ double Evaluator::evaluate(const std::vector<Token>& rpnTokens) {
             }
             
             size_t arity = FunctionRegistry::getInstance().getFunctionArity(token.value);
-            
+
             if (stack.size() < arity) {
                 throw std::runtime_error("Not enough operands for operation: " + token.value);
             }

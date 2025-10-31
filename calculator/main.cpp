@@ -4,15 +4,11 @@
 #include "baseClasses.hpp"
 #include "evaluator.hpp"
 #include "functionRegistry.hpp"
+#include "calculator.hpp"
 #include <string>
 
 int main() {
-    std::string expr;
-    FunctionRegistry::getInstance().loadPluginsFromDirectory();
-    std::getline(std::cin, expr);
-    Parser parser;
-    Evaluator evaluator;
-    auto rpn = parser.parse(expr);
-    std::cout << evaluator.evaluate(rpn) << std::endl;
+    Calculator calc;
+    calc.run();
     return 0;
 }

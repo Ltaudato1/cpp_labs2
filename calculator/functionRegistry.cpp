@@ -2,13 +2,13 @@
 #include "IPluginFunction.hpp"
 #include <iostream>
 
-void FunctionRegistry::registerFunction(const std::string& name, 
-                                       std::function<double(const std::vector<double>&)> func,
+void FunctionRegistry::registerFunction(std::string const& name, 
+                                       std::function<double(std::vector<double> const&)> func,
                                        int arity) {
     functions_[name] = {func, arity};
 }
 
-bool FunctionRegistry::hasFunction(const std::string& name) const {
+bool FunctionRegistry::hasFunction(std::string const& name) const {
     if (functions_.find(name) == functions_.end()) {
         FunctionRegistry::getInstance().loadPluginsFromDirectory();
         return functions_.find(name) != functions_.end();
@@ -16,30 +16,29 @@ bool FunctionRegistry::hasFunction(const std::string& name) const {
     return true;
 }
 
-double FunctionRegistry::callFunction(const std::string& name, const std::vector<double>& args) const {
+double FunctionRegistry::callFunction(std::string const& name, std::vector<double> const& args) const {
     if (!hasFunction(name)) {
         throw std::runtime_error("Function not found: " + name);
     }
-    const auto& funcInfo = functions_.find(name)->second;
+    auto const& funcInfo = functions_.find(name)->second;
     if (funcInfo.arity != -1 && args.size() != static_cast<size_t>(funcInfo.arity)) {
         throw std::runtime_error("Function " + name + " expects " + 
                                std::to_string(funcInfo.arity) + " arguments");
     }
-    
+
     try {
-        double res = funcInfo.function(args);
-        return res;
-    } catch(std::exception e) {
-        return NULL;
+        return funcInfo.function(args);
+    } catch(std::exception const& e) {
+        throw std::runtime_error("Error in function '" + name + "': " + e.what());
     }
 }
 
-int FunctionRegistry::getFunctionArity(const std::string& name) const {
+int FunctionRegistry::getFunctionArity(std::string const& name) const {
     auto it = functions_.find(name);
     return it != functions_.end() ? it->second.arity : -1;
 }
 
-void FunctionRegistry::loadPluginsFromDirectory(const std::string& directoryPath) {
+void FunctionRegistry::loadPluginsFromDirectory(std::string const& directoryPath) {
     namespace fs = std::filesystem;
     
     try {
@@ -52,12 +51,12 @@ void FunctionRegistry::loadPluginsFromDirectory(const std::string& directoryPath
                 }
             }
         }
-    } catch (const fs::filesystem_error& ex) {
+    } catch (fs::filesystem_error const& ex) {
         std::cerr << "Error accessing directory: " << ex.what() << std::endl;
     }
 }
 
-void FunctionRegistry::loadPlugin(const std::string& pluginPath) {
+void FunctionRegistry::loadPlugin(std::string const& pluginPath) {
     #ifdef _WIN32
         HMODULE library = LoadLibraryA(pluginPath.c_str());
     #else
@@ -93,7 +92,7 @@ void FunctionRegistry::loadPlugin(const std::string& pluginPath) {
             int arity = getArityFunc ? getArityFunc() : -1; // -1 для переменного числа аргументов
             
             // Обертка для преобразования формата вызова
-            auto wrappedFunc = [executeFunc](const std::vector<double>& args) -> double {
+            auto wrappedFunc = [executeFunc](std::vector<double> const& args) -> double {
                 return executeFunc(args.data(), static_cast<int>(args.size()));
             };
             
