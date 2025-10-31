@@ -13,9 +13,9 @@
 #endif
 
 extern "C" {
-    typedef double (*ExecuteFunction)(const double* args, int argCount);
+    typedef double (*ExecuteFunction)(double const* args, int argCount);
     typedef int (*GetArityFunction)();
-    typedef const char* (*GetNameFunction)();
+    typedef char const* (*GetNameFunction)();
     
     API void registerPluginFunctions();
 }

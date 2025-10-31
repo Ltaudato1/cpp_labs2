@@ -3,7 +3,7 @@
 #include <stack>
 #include "functionRegistry.hpp"
 
-double Evaluator::evaluate(const std::vector<Token>& rpnTokens) {
+double Evaluator::evaluate(std::vector<Token> const& rpnTokens) {
     std::stack<double> stack;
 
     for (const auto& token : rpnTokens) {

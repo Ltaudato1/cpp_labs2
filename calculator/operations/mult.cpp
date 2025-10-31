@@ -13,7 +13,7 @@ extern "C" {
         if (argCount != getFunctionArity()) {
             return 0.0;
         }
-        return args[0] - args[1];
+        return args[0] * args[1];
     }
     API void registerPluginFunctions() { }
 }
