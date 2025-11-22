@@ -42,12 +42,24 @@ void FunctionRegistry::loadPluginsFromDirectory(std::string const& directoryPath
     namespace fs = std::filesystem;
     
     try {
+        if (!fs::exists(directoryPath)) {
+            std::cerr << "Plugins directory not found: " << directoryPath << std::endl;
+            return;
+        }
+        
         for (const auto& entry : fs::directory_iterator(directoryPath)) {
             if (entry.is_regular_file()) {
                 std::string extension = entry.path().extension().string();
                 
                 if (extension == ".dll") {
-                    loadPlugin(entry.path().string());
+                    // Convert path to string with forward slashes for cross-platform compatibility
+                    std::string pluginPath = entry.path().string();
+                    #ifdef _WIN32
+                        // Keep backslashes on Windows for LoadLibraryA
+                    #else
+                        // No conversion needed on Unix
+                    #endif
+                    loadPlugin(pluginPath);
                 }
             }
         }
@@ -59,14 +71,24 @@ void FunctionRegistry::loadPluginsFromDirectory(std::string const& directoryPath
 void FunctionRegistry::loadPlugin(std::string const& pluginPath) {
     #ifdef _WIN32
         HMODULE library = LoadLibraryA(pluginPath.c_str());
+        if (!library) {
+            DWORD error = GetLastError();
+            std::cerr << "Failed to load library: " << pluginPath << " (Error: " << error << ")";
+            if (error == 193) {
+                std::cerr << " [ERROR_BAD_EXE_FORMAT - architecture mismatch or corrupted DLL]";
+            } else if (error == 126) {
+                std::cerr << " [ERROR_MOD_NOT_FOUND - dependency not found]";
+            }
+            std::cerr << std::endl;
+            return;
+        }
     #else
         void* library = dlopen(pluginPath.c_str(), RTLD_LAZY);
+        if (!library) {
+            std::cerr << "Failed to load library: " << pluginPath << " (" << dlerror() << ")" << std::endl;
+            return;
+        }
     #endif
-    
-    if (!library) {
-        std::cerr << "Failed to load library: " << pluginPath << std::endl;
-        return;
-    }
     
     // Загружаем функцию регистрации
     #ifdef _WIN32

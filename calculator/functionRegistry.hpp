@@ -24,7 +24,13 @@ public:
     double callFunction(std::string const& name, const std::vector<double>& args) const;
     int getFunctionArity(std::string const& name) const;
     
-    void loadPluginsFromDirectory(std::string const& directoryPath="./plugins");
+    void loadPluginsFromDirectory(
+        #ifdef _WIN32
+            std::string const& directoryPath="./plugins"
+        #else
+            std::string const& directoryPath="./plugins"
+        #endif
+    );
     void loadPlugin(std::string const& pluginPath);
     void unloadAllPlugins();
     

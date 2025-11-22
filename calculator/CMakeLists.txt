@@ -24,11 +24,24 @@ add_executable(calculator
     IPluginFunction.hpp
 )
 
-add_custom_command(TARGET calculator POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-        ${CMAKE_SOURCE_DIR}/plugins
-        $<TARGET_FILE_DIR:calculator>/plugins
-    COMMENT "Copying pre-built plugins to output directory"
-)
+target_link_libraries(calculator)
 
-target_link_libraries(calculator stdc++fs)
+# Compile all plugins from operations directory
+file(GLOB PLUGIN_SOURCES "operations/*.cpp")
+
+foreach(PLUGIN_SOURCE ${PLUGIN_SOURCES})
+    get_filename_component(PLUGIN_NAME ${PLUGIN_SOURCE} NAME_WE)
+    
+    add_library(${PLUGIN_NAME} SHARED ${PLUGIN_SOURCE})
+    set_target_properties(${PLUGIN_NAME} PROPERTIES PREFIX "")
+    set_target_properties(${PLUGIN_NAME} PROPERTIES SUFFIX ".dll")
+    
+    # Define PLUGIN_EXPORTS for proper dllexport on Windows
+    target_compile_definitions(${PLUGIN_NAME} PRIVATE PLUGIN_EXPORTS)
+    
+    # Set output directory for plugins
+    set_target_properties(${PLUGIN_NAME} PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+        RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/plugins"
+    )
+endforeach()
