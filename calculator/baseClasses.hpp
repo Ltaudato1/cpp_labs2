@@ -5,6 +5,7 @@
 enum Type { 
     NUMBER, 
     OPERATION,
+    FUNCTION,
     LEFTPAREN, 
     RIGHTPAREN,
     COMMA 

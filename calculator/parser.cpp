@@ -53,6 +53,16 @@ Token Parser::parseFunction(std::string const& expr, size_t& pos) {
         name += expr[pos++];
     }
     
+    // Пропускаем пробелы
+    while (pos < expr.length() && std::isspace(expr[pos])) {
+        pos++;
+    }
+    
+    // Если после имени идет '(', то это функция
+    if (pos < expr.length() && expr[pos] == '(') {
+        return Token(FUNCTION, name);
+    }
+    
     return Token(OPERATION, name);
 }
 
@@ -95,25 +105,61 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
         return 0; // Для функций и скобок
     };
     
-    for (auto const& token : tokens) {
+    // Проверяем, является ли операция бинарной
+    auto isBinaryOp = [](std::string const& op) {
+        return op == "+" || op == "-" || op == "*" || op == "/" || op == "^";
+    };
+    
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        auto const& token = tokens[i];
+        
         switch (token.type) {
             case NUMBER:
                 output.push_back(token);
                 break;
                 
-            case OPERATION: {
-                int currentPrec = getPrecedence(token.value);
+            case FUNCTION:
+                stack.push(token);
+                break;
                 
-                while (!stack.empty() && stack.top().type == OPERATION) {
-                    int stackPrec = getPrecedence(stack.top().value);
-                    if (currentPrec <= stackPrec) {
-                        output.push_back(stack.top());
-                        stack.pop();
+            case OPERATION: {
+                // Проверяем, является ли это унарным минусом
+                bool isUnaryMinus = false;
+                if (token.value == "-") {
+                    // Унарный минус, если:
+                    // 1. Это первый токен
+                    // 2. Предыдущий токен - операция, левая скобка, функция или запятая
+                    if (i == 0) {
+                        isUnaryMinus = true;
                     } else {
-                        break;
+                        auto const& prevToken = tokens[i - 1];
+                        if (prevToken.type == OPERATION && isBinaryOp(prevToken.value)) {
+                            isUnaryMinus = true;
+                        } else if (prevToken.type == LEFTPAREN || prevToken.type == COMMA || prevToken.type == FUNCTION) {
+                            isUnaryMinus = true;
+                        }
                     }
                 }
-                stack.push(token);
+                
+                if (isUnaryMinus) {
+                    // Обработка унарного минуса: преобразуем в (0 - x)
+                    output.push_back(Token(NUMBER, "0"));
+                    stack.push(Token(OPERATION, "-"));
+                } else {
+                    // Бинарная операция
+                    int currentPrec = getPrecedence(token.value);
+                    
+                    while (!stack.empty() && stack.top().type == OPERATION) {
+                        int stackPrec = getPrecedence(stack.top().value);
+                        if (currentPrec <= stackPrec) {
+                            output.push_back(stack.top());
+                            stack.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                    stack.push(token);
+                }
                 break;
             }
                 
@@ -123,10 +169,15 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
                 
             case RIGHTPAREN:
                 while (!stack.empty() && stack.top().type != LEFTPAREN) {
+                    if (stack.top().type == FUNCTION) {
+                        output.push_back(stack.top());
+                        stack.pop();
+                        break;
+                    }
                     output.push_back(stack.top());
                     stack.pop();
                 }
-                if (!stack.empty()) stack.pop(); // Убираем левую скобку
+                if (!stack.empty()) stack.pop(); // Убираем левую скобку или функцию
                 break;
                 
             default:
@@ -134,7 +185,7 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
         }
     }
     
-    // Выталкиваем оставшиеся операции
+    // Выталкиваем оставшиеся операции и функции
     while (!stack.empty()) {
         output.push_back(stack.top());
         stack.pop();

@@ -10,6 +10,26 @@ double Evaluator::evaluate(std::vector<Token> const& rpnTokens) {
         if (token.type == NUMBER) {
             stack.push(std::stod(token.value));
         }
+        else if (token.type == FUNCTION) {
+            if (!FunctionRegistry::getInstance().hasFunction(token.value)) {
+                throw std::runtime_error("Unknown function: " + token.value);
+            }
+            
+            size_t arity = FunctionRegistry::getInstance().getFunctionArity(token.value);
+
+            if (stack.size() < arity) {
+                throw std::runtime_error("Not enough operands for function: " + token.value);
+            }
+            
+            std::vector<double> args;
+            for (size_t i = 0; i < arity; ++i) {
+                args.insert(args.begin(), stack.top());
+                stack.pop();
+            }
+            
+            double result = FunctionRegistry::getInstance().callFunction(token.value, args);
+            stack.push(result);
+        }
         else if (token.type == OPERATION) {
             if (!FunctionRegistry::getInstance().hasFunction(token.value)) {
                 throw std::runtime_error("Unknown operation: " + token.value);

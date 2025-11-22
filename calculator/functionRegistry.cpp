@@ -80,7 +80,7 @@ void FunctionRegistry::loadPlugin(std::string const& pluginPath) {
         #ifdef _WIN32
             auto getNameFunc = (GetNameFunction)GetProcAddress(library, "getFunctionName");
             auto getArityFunc = (GetArityFunction)GetProcAddress(library, "getFunctionArity");
-            auto executeFunc = (PluginFunction)GetProcAddress(library, "executeFunction");
+            auto executeFunc = (ExecuteFunction)GetProcAddress(library, "executeFunction");
         #else
             auto getNameFunc = (GetNameFunction)dlsym(library, "getFunctionName");
             auto getArityFunc = (GetArityFunction)dlsym(library, "getFunctionArity");
