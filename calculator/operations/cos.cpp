@@ -1,4 +1,5 @@
 #include "../IPluginFunction.hpp"
+#include <stdexcept>
 #include <cmath>
 
 extern "C" {
@@ -12,7 +13,7 @@ extern "C" {
     
     API double executeFunction(const double* args, int argCount) {
         if (argCount != getFunctionArity()) {
-            return 0.0;
+            throw std::invalid_argument("Invalid number of arguments");
         }
         return std::cos(args[0]);
     }

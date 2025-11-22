@@ -1,4 +1,5 @@
 #include "../IPluginFunction.hpp"
+#include <stdexcept>
 
 extern "C" {
     API const char* getFunctionName() {
@@ -11,7 +12,7 @@ extern "C" {
     
     API double executeFunction(const double* args, int argCount) {
         if (argCount != getFunctionArity()) {
-            return 0.0;
+            throw std::invalid_argument("Invalid number of arguments");
         }
         return args[0] + args[1];
     }

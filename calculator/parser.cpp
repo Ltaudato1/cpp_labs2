@@ -102,10 +102,9 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
         if (op == "^") return 4;
         if (op == "*" || op == "/") return 3;
         if (op == "+" || op == "-") return 2;
-        return 0; // Для функций и скобок
+        return 0;
     };
     
-    // Проверяем, является ли операция бинарной
     auto isBinaryOp = [](std::string const& op) {
         return op == "+" || op == "-" || op == "*" || op == "/" || op == "^";
     };
@@ -169,15 +168,16 @@ std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
                 
             case RIGHTPAREN:
                 while (!stack.empty() && stack.top().type != LEFTPAREN) {
-                    if (stack.top().type == FUNCTION) {
-                        output.push_back(stack.top());
-                        stack.pop();
-                        break;
-                    }
                     output.push_back(stack.top());
                     stack.pop();
                 }
-                if (!stack.empty()) stack.pop(); // Убираем левую скобку или функцию
+                if (!stack.empty()) stack.pop(); // Убираем левую скобку
+                
+                // Если после скобок идет функция, выталкиваем её
+                if (!stack.empty() && stack.top().type == FUNCTION) {
+                    output.push_back(stack.top());
+                    stack.pop();
+                }
                 break;
                 
             default:

@@ -26,7 +26,7 @@ public:
     
     void loadPluginsFromDirectory(
         #ifdef _WIN32
-            std::string const& directoryPath="./plugins"
+            std::string const& directoryPath=".\plugins"
         #else
             std::string const& directoryPath="./plugins"
         #endif
