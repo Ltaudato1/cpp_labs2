@@ -25,11 +25,7 @@ public:
     int getFunctionArity(std::string const& name) const;
     
     void loadPluginsFromDirectory(
-        #ifdef _WIN32
-            std::string const& directoryPath=".\plugins"
-        #else
-            std::string const& directoryPath="./plugins"
-        #endif
+            std::string const& directoryPath="plugins"
     );
     void loadPlugin(std::string const& pluginPath);
     void unloadAllPlugins();

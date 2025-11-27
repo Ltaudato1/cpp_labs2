@@ -63,7 +63,8 @@ Token Parser::parseFunction(std::string const& expr, size_t& pos) {
         return Token(FUNCTION, name);
     }
     
-    return Token(OPERATION, name);
+    // Если это не функция (нет скобок), выбрасываем исключение
+    throw std::invalid_argument("Function '" + name + "' must be called with parentheses, e.g., " + name + "(x)");
 }
 
 std::vector<Token> Parser::tokenize(std::string const& expr) {
