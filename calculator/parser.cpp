@@ -1,0 +1,201 @@
+#include <iostream>
+#include <stack>
+#include "baseClasses.hpp"
+#include "parser.hpp"
+
+Token Parser::parseNumber(std::string const& expr, size_t& pos) {
+    std::string number;
+    bool hasDecimalPoint = false;
+    
+    while (pos < expr.length() && 
+           (std::isdigit(expr[pos]) || expr[pos] == '.')) {
+        
+        if (expr[pos] == '.') {
+            if (hasDecimalPoint) {
+                throw std::invalid_argument("Invalid number: multiple decimal points");
+            }
+            hasDecimalPoint = true;
+        }
+        
+        number += expr[pos++];
+    }
+    
+    // Проверяем, что число не заканчивается на точку
+    if (number.back() == '.') {
+        throw std::invalid_argument("Invalid number: ends with decimal point");
+    }
+    
+    return Token(NUMBER, number);
+}
+
+Token Parser::parseOperatorOrParenthesis(std::string const& expr, size_t& pos) {
+    char ch = expr[pos++];
+    
+    switch (ch) {
+        case '+': case '-': case '*': case '/': case '^':
+            return Token(OPERATION, std::string(1, ch));
+        case '(':
+            return Token(LEFTPAREN, "(");
+        case ')':
+            return Token(RIGHTPAREN, ")");
+        case ',':
+            return Token(COMMA, ",");
+        default:
+            throw std::invalid_argument("Unknown character: " + std::string(1, ch));
+    }
+}
+
+Token Parser::parseFunction(std::string const& expr, size_t& pos) {
+    std::string name;
+    
+    while (pos < expr.length() && 
+           (std::isalnum(expr[pos]) || expr[pos] == '_')) {
+        name += expr[pos++];
+    }
+    
+    // Пропускаем пробелы
+    while (pos < expr.length() && std::isspace(expr[pos])) {
+        pos++;
+    }
+    
+    // Если после имени идет '(', то это функция
+    if (pos < expr.length() && expr[pos] == '(') {
+        return Token(FUNCTION, name);
+    }
+    
+    // Если это не функция (нет скобок), выбрасываем исключение
+    throw std::invalid_argument("Function '" + name + "' must be called with parentheses, e.g., " + name + "(x)");
+}
+
+std::vector<Token> Parser::tokenize(std::string const& expr) {
+    std::vector<Token> tokens;
+    size_t pos = 0;
+    
+    while (pos < expr.length()) {
+        if (std::isspace(expr[pos])) {
+            pos++;
+            continue;
+        }
+        
+        // Числа (целые, дробные)
+        if (std::isdigit(expr[pos]) || expr[pos] == '.') {
+            tokens.push_back(parseNumber(expr, pos));
+        }
+        // Функции
+        else if (std::isalpha(expr[pos])) {
+            tokens.push_back(parseFunction(expr, pos));
+        }
+        // Операторы и скобки
+        else {
+            tokens.push_back(parseOperatorOrParenthesis(expr, pos));
+        }
+    }
+    
+    return tokens;
+}
+
+std::vector<Token> Parser::toRPN(std::vector<Token> const& tokens) {
+    std::vector<Token> output;
+    std::stack<Token> stack;
+    
+    // Таблица приоритетов операций
+    auto getPrecedence = [](std::string const& op) {
+        if (op == "^") return 4;
+        if (op == "*" || op == "/") return 3;
+        if (op == "+" || op == "-") return 2;
+        return 0;
+    };
+    
+    auto isBinaryOp = [](std::string const& op) {
+        return op == "+" || op == "-" || op == "*" || op == "/" || op == "^";
+    };
+    
+    for (size_t i = 0; i < tokens.size(); ++i) {
+        auto const& token = tokens[i];
+        
+        switch (token.type) {
+            case NUMBER:
+                output.push_back(token);
+                break;
+                
+            case FUNCTION:
+                stack.push(token);
+                break;
+                
+            case OPERATION: {
+                // Проверяем, является ли это унарным минусом
+                bool isUnaryMinus = false;
+                if (token.value == "-") {
+                    // Унарный минус, если:
+                    // 1. Это первый токен
+                    // 2. Предыдущий токен - операция, левая скобка, функция или запятая
+                    if (i == 0) {
+                        isUnaryMinus = true;
+                    } else {
+                        auto const& prevToken = tokens[i - 1];
+                        if (prevToken.type == OPERATION && isBinaryOp(prevToken.value)) {
+                            isUnaryMinus = true;
+                        } else if (prevToken.type == LEFTPAREN || prevToken.type == COMMA || prevToken.type == FUNCTION) {
+                            isUnaryMinus = true;
+                        }
+                    }
+                }
+                
+                if (isUnaryMinus) {
+                    // Обработка унарного минуса: преобразуем в (0 - x)
+                    output.push_back(Token(NUMBER, "0"));
+                    stack.push(Token(OPERATION, "-"));
+                } else {
+                    // Бинарная операция
+                    int currentPrec = getPrecedence(token.value);
+                    
+                    while (!stack.empty() && stack.top().type == OPERATION) {
+                        int stackPrec = getPrecedence(stack.top().value);
+                        if (currentPrec <= stackPrec) {
+                            output.push_back(stack.top());
+                            stack.pop();
+                        } else {
+                            break;
+                        }
+                    }
+                    stack.push(token);
+                }
+                break;
+            }
+                
+            case LEFTPAREN:
+                stack.push(token);
+                break;
+                
+            case RIGHTPAREN:
+                while (!stack.empty() && stack.top().type != LEFTPAREN) {
+                    output.push_back(stack.top());
+                    stack.pop();
+                }
+                if (!stack.empty()) stack.pop(); // Убираем левую скобку
+                
+                // Если после скобок идет функция, выталкиваем её
+                if (!stack.empty() && stack.top().type == FUNCTION) {
+                    output.push_back(stack.top());
+                    stack.pop();
+                }
+                break;
+                
+            default:
+                break;
+        }
+    }
+    
+    // Выталкиваем оставшиеся операции и функции
+    while (!stack.empty()) {
+        output.push_back(stack.top());
+        stack.pop();
+    }
+    
+    return output;
+}
+
+std::vector<Token> Parser::parse(std::string const& expr) {
+    auto tokens = tokenize(expr);
+    return toRPN(tokens);
+}
