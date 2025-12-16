@@ -9,6 +9,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wextra -pedantic")
 set(SOURCES
     main.cpp
     engine.cpp
+    tests.cpp
 )
 
 # Заголовочные файлы
@@ -17,6 +18,7 @@ set(HEADERS
     iwrapper.hpp
     wrapper.hpp
     wrapper.tpp
+    tests.hpp
 )
 
 add_executable(wrapper_engine ${SOURCES})
